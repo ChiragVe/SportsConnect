@@ -1,19 +1,24 @@
 package com.sportsConnect;
 
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+
+import com.sportsConnect.util.KnockoutTournament;
 
 public class MenuDrivenJdbcExample {
 
     // Database URL, Username, and Password
     static final String DB_URL = "jdbc:mysql://localhost:3306/sportsConnect";
     static final String USER = "root";
-    static final int PASS_INT = 7730;  // Example integer password
+    static final int PASS_INT = 1234;  // Example integer password
     static final String PASS = String.valueOf(PASS_INT);  // Convert integer password to string
 
     public static void main(String[] args) {
@@ -32,46 +37,31 @@ public class MenuDrivenJdbcExample {
             while (true) {
                 // Display menu
                 System.out.println("Menu:");
-                System.out.println("1. Insert a match");
+                System.out.println("1. Create and store fixtures");
                 System.out.println("2. Fetch all matches");
-                System.out.println("3. Exit");
+                System.out.println("3. Update match details");
+                System.out.println("4. Exit");
                 System.out.print("Enter your choice: ");
                 int choice = scanner.nextInt();
                 scanner.nextLine();  // Consume newline
 
                 switch (choice) {
                     case 1:
-                        // Insert values into the table
-                        System.out.print("Enter matchId: ");
-                        int matchId = scanner.nextInt();
+                        // Create and store fixtures
+                        System.out.print("Enter the number of teams: ");
+                        int numTeams = scanner.nextInt();
                         scanner.nextLine();  // Consume newline
 
-                        System.out.print("Enter team1: ");
-                        String team1 = scanner.nextLine();
+                        List<String> teamNames = new ArrayList<>();
+                        for (int i = 0; i < numTeams; i++) {
+                            System.out.print("Enter the name of team " + (i + 1) + ": ");
+                            teamNames.add(scanner.nextLine());
+                        }
 
-                        System.out.print("Enter team2: ");
-                        String team2 = scanner.nextLine();
+                        KnockoutTournament tournament = new KnockoutTournament(numTeams, teamNames);
+                        tournament.createAndStoreFixtures(conn);
 
-                        System.out.print("Enter matchDate (YYYY-MM-DD): ");
-                        String matchDate = scanner.nextLine();
-
-                        System.out.print("Enter score: ");
-                        String score = scanner.nextLine();
-
-                        System.out.print("Enter matchType: ");
-                        String matchType = scanner.nextLine();
-
-                        String insertSQL = "INSERT INTO footballMatches(matchId, team1, team2, matchDate, score, MatchType) VALUES (?, ?, ?, ?, ?, ?)";
-                        pstmt = conn.prepareStatement(insertSQL);
-                        pstmt.setInt(1, matchId);
-                        pstmt.setString(2, team1);
-                        pstmt.setString(3, team2);
-                        pstmt.setString(4, matchDate);
-                        pstmt.setString(5, score);
-                        pstmt.setString(6, matchType);
-                        pstmt.executeUpdate();
-
-                        System.out.println("Match inserted successfully!");
+                        System.out.println("Fixtures created and stored successfully!");
                         break;
 
                     case 2:
@@ -91,15 +81,37 @@ public class MenuDrivenJdbcExample {
 
                             // Display values
                             System.out.print("Match ID: " + mId + "\n");
-                            System.out.print( t1+ " vs "+ t2 +"\n");
-                            System.out.print(" Score: " + mScore + "\n");
-                            System.out.print(" Match Date: " + mDate +"\n");
+                            System.out.print(t1 + " vs " + t2 + "\n");
+                            System.out.print("Score: " + mScore + "\n");
+                            System.out.print("Match Date: " + mDate + "\n");
                             System.out.println("Match Type: " + mType);
                         }
                         rs.close();
                         break;
 
                     case 3:
+                        // Update match details
+                        System.out.print("Enter matchId to update: ");
+                        int updateMatchId = scanner.nextInt();
+                        scanner.nextLine();  // Consume newline
+
+                        System.out.print("Enter new matchDate (YYYY-MM-DD): ");
+                        String newMatchDate = scanner.nextLine();
+
+                        System.out.print("Enter new score: ");
+                        String newScore = scanner.nextLine();
+
+                        String updateSQL = "UPDATE footballMatches SET matchDate = ?, score = ? WHERE matchId = ?";
+                        pstmt = conn.prepareStatement(updateSQL);
+                        pstmt.setString(1, newMatchDate);
+                        pstmt.setString(2, newScore);
+                        pstmt.setInt(3, updateMatchId);
+                        pstmt.executeUpdate();
+
+                        System.out.println("Match details updated successfully!");
+                        break;
+
+                    case 4:
                         // Exit the program
                         System.out.println("Goodbye!");
                         return;
