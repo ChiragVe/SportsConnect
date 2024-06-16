@@ -1,4 +1,4 @@
-package com.sportsConnect.util;
+package com.app.sportsConnect.util;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;

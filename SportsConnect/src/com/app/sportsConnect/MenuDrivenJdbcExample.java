@@ -1,4 +1,4 @@
-package com.sportsConnect;
+package com.app.sportsConnect;
 
 
 import java.sql.Connection;
@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import com.sportsConnect.util.KnockoutTournament;
+import com.app.sportsConnect.util.KnockoutTournament;
 
 public class MenuDrivenJdbcExample {
 
