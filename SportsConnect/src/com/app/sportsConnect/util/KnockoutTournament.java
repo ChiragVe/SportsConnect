@@ -1,55 +1,51 @@
 package com.app.sportsConnect.util;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 public class KnockoutTournament {
+    private int numTeams;
+    private List<String> teamNames;
+    private String sportType;
 
-    private List<String> teams;
-
-    public KnockoutTournament(int numTeams, List<String> teamNames) {
-        if (teamNames.size() != numTeams) {
-            throw new IllegalArgumentException("Number of team names provided does not match the number of teams.");
-        }
-        this.teams = new ArrayList<>(teamNames);
+    public KnockoutTournament(int numTeams, List<String> teamNames, String sportType) {
+        this.numTeams = numTeams;
+        this.teamNames = teamNames;
+        this.sportType = sportType;
     }
 
     public void createAndStoreFixtures(Connection conn) throws SQLException {
-        List<String> currentRound = new ArrayList<>(teams);
-        Random rand = new Random();
-        int matchId = 1;
-
-        System.out.println("Storing Single Round Fixtures:");
-        Collections.shuffle(currentRound);
-
-        if (currentRound.size() % 2 != 0) {
-            int byeIndex = rand.nextInt(currentRound.size());
-            System.out.println(currentRound.get(byeIndex) + " gets a bye");
-            String teamWithBye = currentRound.remove(byeIndex);
-            currentRound.add(teamWithBye); // Add the team with bye to the end of the list for the next round
+        // If the number of teams is odd, add a "bye"
+        if (teamNames.size() % 2 != 0) {
+            teamNames.add("Bye");
         }
 
-        for (int i = 0; i < currentRound.size() - 1; i += 2) {
-            String team1 = currentRound.get(i);
-            String team2 = currentRound.get(i + 1);
+        String insertSQL = "INSERT INTO " + sportType + "Fixtures (team1, team2, matchDate, matchType) VALUES (?, ?, ?, ?)";
+        
+        List<String> fixtures = generateFixtures(teamNames);
 
-            System.out.println(team1 + " vs " + team2);
-
-            // Insert match into the database
-            String insertSQL = "INSERT INTO footballMatches(matchId, team1, team2, matchDate, score, MatchType) VALUES (?, ?, ?, ?, ?, ?)";
+        for (String fixture : fixtures) {
+            String[] teams = fixture.split("-");
             try (PreparedStatement pstmt = conn.prepareStatement(insertSQL)) {
-                pstmt.setInt(1, matchId++);
-                pstmt.setString(2, team1);
-                pstmt.setString(3, team2);
-                pstmt.setString(4, null);  // matchDate will be null initially
-                pstmt.setString(5, null);  // score will be null initially
-                pstmt.setString(6, "Knockout");
+                pstmt.setString(1, teams[0]);
+                pstmt.setString(2, teams[1]);
+                pstmt.setString(3, null); // Placeholder for matchDate
+                pstmt.setString(4, "Knockout"); // Example matchType
                 pstmt.executeUpdate();
             }
         }
+    }
+
+    private List<String> generateFixtures(List<String> teams) {
+        List<String> fixtures = new ArrayList<>();
+        for (int i = 0; i < teams.size(); i += 2) {
+            if (i + 1 < teams.size()) {
+                fixtures.add(teams.get(i) + "-" + teams.get(i + 1));
+            }
+        }
+        return fixtures;
     }
 }
